@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sagan om Oss</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800&family=Permanent+Marker&family=Pinyon+Script&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #ff4d6d;
+            --bg-dark: #0f0c29;
+            --bg-gbg: #2c3e50;
+            --bg-liseberg: #3e2723;
+            --skin-boy: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            --skin-girl: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+        body {
+            background: var(--bg-dark);
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            color: white;
+            perspective: 1200px;
+            cursor: pointer;
+            transition: background 2s ease;
+        }
+
+        /* --- 3D WORLD --- */
+        #world {
+            position: absolute;
+            width: 100%; height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.2s ease-out;
+        }
+
+        .floor {
+            position: absolute;
+            bottom: -400px; left: -50%;
+            width: 200%; height: 2000px;
+            background: radial-gradient(circle, #333 0%, #000 70%);
+            transform: rotateX(85deg);
+            z-index: 0;
+            transition: background 1s;
+        }
+
+        /* --- CHARACTERS --- */
+        .actor {
+            position: absolute; bottom: 25%;
+            width: 100px; height: 140px;
+            transform-style: preserve-3d;
+            transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+        #boy { left: 40%; }
+        #girl { right: -20%; }
+
+        .body-shape {
+            position: absolute; width: 100px; height: 120px;
+            border-radius: 50px 50px 40px 40px;
+            background: var(--skin-boy);
+            box-shadow: inset -5px -5px 20px rgba(0,0,0,0.3), 5px 5px 20px rgba(255,255,255,0.2);
+            animation: breathe 3s infinite ease-in-out;
+        }
+        #girl .body-shape { background: var(--skin-girl); }
+
+        .eyes { position: absolute; top: 40px; left: 25px; width: 50px; height: 20px; display: flex; justify-content: space-between; }
+        .eye { width: 12px; height: 18px; background: #222; border-radius: 10px; animation: blink 4s infinite; transition: all 0.3s; }
+        .eye::after { content:''; position:absolute; top:4px; right:3px; width:4px; height:4px; background:#fff; border-radius:50%; }
+        
+        .eyebrows { position:absolute; top:30px; left:25px; width:50px; display:flex; justify-content:space-between; opacity:0; transition:0.3s; }
+        .eyebrow { width:15px; height:3px; background:#222; border-radius:2px; }
+
+        .mouth { position: absolute; bottom: 30px; left: 45px; width: 10px; height: 5px; background: #222; border-radius: 10px; transition: 0.3s; }
+
+        .shadow {
+            position: absolute; bottom: -10px; left: 10px; width: 80px; height: 20px;
+            background: rgba(0,0,0,0.5); border-radius: 50%; filter: blur(10px); transform: rotateX(60deg);
+        }
+
+        /* Expressions */
+        .actor.skeptical .eyebrows { opacity: 1; }
+        .actor.skeptical .eyebrow:nth-child(1) { transform: rotate(15deg) translateY(-3px); }
+        .actor.skeptical .eyebrow:nth-child(2) { transform: rotate(-5deg); }
+        .actor.skeptical .mouth { width: 15px; transform: translateX(-2px) rotate(-5deg); }
+
+        .actor.talking .mouth { width: 20px; height: 15px; animation: talk 0.15s infinite; border-radius: 50%; }
+        .actor.talking .body-shape { animation: bounceTalk 0.15s infinite alternate; }
+
+        .actor.singing .mouth { height: 20px; width: 15px; border-radius: 50%; animation: sing 0.3s infinite alternate; background: #000; }
+        .actor.singing .body-shape { transform: skewX(2deg); animation: vibe 0.4s infinite alternate; }
+
+        .actor.happy .eye { height: 8px; margin-top: 5px; border-radius: 50%; }
+        .actor.happy .mouth { width: 30px; height: 15px; border-radius: 0 0 20px 20px; left: 35px; }
+        .actor.happy .body-shape { animation: bounceHappy 0.5s infinite alternate; }
+
+        .actor.love .eye { background: transparent; animation: none; }
+        .actor.love .eye::after { content: '❤️'; font-size: 20px; top: -5px; left: -4px; background: transparent; }
+
+        /* --- PROPS --- */
+        .phone-wrapper {
+            position: absolute; top: -500px; left: 50%; width: 80px; height: 140px;
+            transform: translateX(-50%) translateZ(100px) rotateY(-10deg);
+            transform-style: preserve-3d; transition: all 0.8s; z-index: 50;
+        }
+        .phone-body {
+            width: 100%; height: 100%; background: #fff; border-radius: 15px; border: 2px solid #333;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .hinge-logo { font-family: 'Outfit'; font-weight: 800; color: #000; font-size: 1.5rem; letter-spacing: -1px; }
+        .heart-match { font-size: 4rem; color: #ff4d6d; position: absolute; opacity: 0; transform: scale(0); transition: 0.5s; }
+
+        .train {
+            position: absolute; top: 25%; left: -150%; width: 500px; height: 220px;
+            background: #f1c40f; border-radius: 20px 20px 0 0;
+            transform: translateZ(-100px); box-shadow: 10px 10px 50px #000;
+            transition: left 2s ease-out; display: flex; align-items: center; justify-content: space-around;
+            border-bottom: 10px solid #1a252f;
+        }
+        .window { width: 100px; height: 100px; background: #87CEEB; border: 5px solid #34495e; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+
+        .table-wrapper {
+            position: absolute; top: -500px; left: 50%; transform: translateX(-50%) translateZ(50px);
+            width: 160px; height: 100px; transition: top 0.5s;
+        }
+        .table-top { width: 160px; height: 10px; background: #fff; border-radius: 5px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .table-leg { position: absolute; top: 10px; left: 75px; width: 10px; height: 80px; background: #333; }
+        .plate { position: absolute; bottom: 10px; left: 50px; width: 60px; height: 10px; background: #ddd; border-radius: 50%; }
+        .pasta-mound { position: absolute; bottom: 15px; left: 55px; width: 50px; height: 20px; background: #f1c40f; border-radius: 50% 50% 0 0; }
+        .candle { position: absolute; bottom: 10px; right: 30px; width: 6px; height: 25px; background: #c0392b; }
+        .flame { position: absolute; top: -12px; left: -2px; width: 10px; height: 14px; background: #ffd700; border-radius: 50% 50% 20% 20%; animation: flicker 0.1s infinite; }
+
+        .car-wrapper {
+            position: absolute; bottom: 20%; left: 150%; width: 350px; height: 160px;
+            transform-style: preserve-3d; transition: left 1s;
+        }
+        .car-body { width: 100%; height: 100%; background: #e74c3c; border-radius: 40px 60px 10px 10px; box-shadow: inset 0 0 20px rgba(0,0,0,0.3); border-bottom: 10px solid #c0392b; }
+        .wheel { position: absolute; bottom: -25px; width: 70px; height: 70px; background: #222; border-radius: 50%; border: 5px solid #555; animation: spin 0.2s infinite linear; }
+        .wheel.f { left: 40px; } .wheel.b { right: 40px; }
+
+        .park-lights { position: absolute; top: 5%; width: 100%; display: flex; justify-content: space-around; opacity: 0; }
+        .bulb { width: 30px; height: 30px; border-radius: 50%; background: #fff; box-shadow: 0 0 30px #fff; animation: blinkLights 1s infinite alternate; }
+
+        /* --- UI & TEXT --- */
+        .ui-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100;
+        }
+
+        .cinematic-text {
+            font-family: 'Permanent Marker', cursive; font-size: 2.2rem; color: #fff;
+            text-shadow: 3px 3px 0 #000; opacity: 0; transform: scale(0.5);
+            transition: all 0.5s; text-align: center; margin-bottom: 50px; max-width: 90%;
+        }
+        .cinematic-text.visible { opacity: 1; transform: scale(1); }
+
+        .bubble {
+            position: absolute; background: white; color: black; padding: 15px;
+            border-radius: 20px; font-family: 'Outfit'; font-weight: bold; font-size: 0.9rem;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); transform: scale(0); transition: transform 0.3s;
+        }
+        .bubble.pop { opacity: 1; transform: scale(1); }
+        .bubble::after { content:''; position: absolute; bottom: -10px; border-width: 10px 10px 0; border-style: solid; border-color: white transparent; }
+        #boyBubble::after { left: 20px; } #girlBubble::after { right: 20px; }
+
+        .note { position: absolute; font-size: 2rem; color: #ffd700; opacity: 0; animation: floatNote 2s infinite ease-out; }
+
+        .final-card {
+            background: rgba(10, 10, 15, 0.95); backdrop-filter: blur(40px);
+            padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.2);
+            text-align: center; opacity: 0; transform: translateY(100vh);
+            transition: all 0.8s; pointer-events: auto; display: none;
+            flex-direction: column; align-items: center; max-width: 90%;
+            box-shadow: 0 20px 60px #000;
+        }
+        .final-card.visible { opacity: 1; transform: translateY(0); display: flex; }
+
+        .btn-container { display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap; justify-content: center; }
+        .btn { padding: 15px 30px; border-radius: 50px; border: none; font-family: 'Outfit'; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.1s; margin: 5px; }
+        .btn-yes { background: #fff; color: #000; box-shadow: 0 5px 0 #ccc; }
+        .btn-yes:active { transform: translate(0, 5px); box-shadow: 0 0 0 #ccc; }
+        .btn-no { background: transparent; color: #aaa; border: 1px solid #555; position: relative; }
+
+        /* Final Text */
+        #finalMessage {
+            font-family: 'Pinyon Script', cursive; font-size: 4rem; color: #ff4d6d;
+            position: absolute; top: 30%; width: 100%; text-align: center;
+            opacity: 0; transition: opacity 1s; text-shadow: 0 0 20px #fff;
+        }
+
+        /* Start Screen */
+        #startScreen {
+            position: fixed; top:0; left:0; width:100%; height:100%; background:#000;
+            z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; cursor:pointer;
+        }
+
+        @keyframes breathe { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(1.02)} }
+        @keyframes blink { 0%,90%,100%{transform:scaleY(1)} 95%{transform:scaleY(0.1)} }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+        @keyframes pulse { 0%{opacity:0.5} 50%{opacity:1} 100%{opacity:0.5} }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes talk { 0%{width:10px} 50%{width:25px} 100%{width:10px} }
+        @keyframes bounceTalk { 0%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+        @keyframes bounceHappy { 0%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+        @keyframes sing { 0%{height:5px; width:10px;} 50%{height:20px; width:20px;} 100%{height:5px; width:10px;} }
+        @keyframes vibe { 0%{transform:skewX(2deg) translateY(0)} 100%{transform:skewX(-2deg) translateY(-2px)} }
+        @keyframes floatNote { 0%{opacity:1; transform:translateY(0) rotate(0);} 100%{opacity:0; transform:translateY(-100px) rotate(20deg);} }
+        @keyframes blinkLights { 0%{opacity:0.3} 100%{opacity:1} }
+        @keyframes flicker { 0%{transform:scaleY(1)} 50%{transform:scaleY(1.2)} 100%{transform:scaleY(1)} }
+
+    </style>
+</head>
+<body>
+
+    <div id="startScreen" onclick="init()">
+        <h1 style="font-family:'Pinyon Script'; color:#ff4d6d; font-size: 3rem;">Sagan om Oss</h1>
+        <div style="font-family:'Outfit'; margin-top:20px; animation:pulse 1s infinite; letter-spacing:2px; text-transform:uppercase;">Tryck för att starta</div>
+        <div style="font-size:0.7rem; color:#666; margin-top:10px;">(Slå på ljudet)</div>
+    </div>
+
+    <!-- HOSTED ROMANTIC MUSIC -->
+    <audio id="bgMusic" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/02/07/audio_13b53f6079.mp3" type="audio/mp3">
+    </audio>
+
+    <!-- WORLD -->
+    <div id="world">
+        <div class="floor"></div>
+        
+        <!-- PROPS -->
+        <div class="train prop" id="train"><div class="window"></div><div class="window"></div><div class="window"></div></div>
+        
+        <div class="phone-wrapper prop" id="phone">
+            <div class="phone-body">
+                <div class="hinge-logo">Hinge</div>
+                <div class="heart-match">❤️</div>
+            </div>
+        </div>
+
+        <div class="table-wrapper prop" id="table">
+            <div class="table-top"></div><div class="table-leg"></div>
+            <div class="plate"></div><div class="pasta-mound"></div>
+            <div class="candle"><div class="flame"></div></div>
+        </div>
+
+        <div class="car-wrapper prop" id="car">
+            <div class="car-body"></div><div class="wheel f"></div><div class="wheel b"></div>
+        </div>
+
+        <div class="park-lights prop" id="lights">
+            <div class="bulb" style="background:#f00"></div><div class="bulb" style="background:#0f0"></div><div class="bulb" style="background:#00f"></div><div class="bulb" style="background:#ff0"></div>
+        </div>
+
+        <!-- CHARACTERS -->
+        <div class="actor" id="boy">
+            <div class="bubble" id="boyBubble" style="bottom:160px; left:-60px;"></div>
+            <div class="body-shape">
+                <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+                <div class="eyebrows"><div class="eyebrow"></div><div class="eyebrow"></div></div>
+                <div class="mouth"></div>
+            </div>
+            <div class="shadow"></div>
+        </div>
+
+        <div class="actor" id="girl">
+            <div class="bubble" id="girlBubble" style="bottom:160px; right:-60px;"></div>
+            <div class="body-shape">
+                <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+                <div class="mouth"></div>
+            </div>
+            <div class="shadow"></div>
+        </div>
+    </div>
+
+    <!-- UI -->
+    <div class="ui-layer">
+        <div class="cinematic-text" id="mainText"></div>
+
+        <!-- FINAL CARD -->
+        <div class="final-card" id="finalCard">
+            <h1 style="color:#ff4d6d; font-family:'Pinyon Script'; font-size:3rem; margin:0;">Cherie Wanje</h1>
+            <p style="margin-top:20px; color:#fff; font-size:1.1rem; line-height:1.6;">
+                Jag hade gått igenom mörker.<br>
+                Men du kom som en välsignelse.<br>
+                <span style="font-size:0.8rem; color:#aaa;">(Och min favorit karaoke-partner)</span>
+            </p>
+            <h2 style="margin-top:30px; font-weight:800; letter-spacing:2px;">VILL DU BLI MIN VALENTIN?</h2>
+            
+            <div class="btn-container">
+                <button class="btn btn-yes" onclick="sheSaidYes()">JA, ABSOLUT ❤️</button>
+                <button class="btn btn-no" id="btnTroll" onmouseenter="trollMove()">Nej (Gillar ej pasta)</button>
+            </div>
+        </div>
+        
+        <div id="finalMessage">FÖR ALLTID ❤️</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        const boy = document.getElementById('boy');
+        const girl = document.getElementById('girl');
+        const text = document.getElementById('mainText');
+        const bgMusic = document.getElementById('bgMusic');
+        const phone = document.getElementById('phone');
+
+        function init() {
+            document.getElementById('startScreen').style.opacity = 0;
+            setTimeout(() => document.getElementById('startScreen').style.display = 'none', 1000);
+            bgMusic.volume = 0.5;
+            bgMusic.play().catch(e => console.log("Audio waiting"));
+            startStory();
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            const x = (window.innerWidth/2 - e.clientX)/50;
+            const y = (window.innerHeight/2 - e.clientY)/50;
+            document.getElementById('world').style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+        });
+
+        function startStory() {
+            // HINGE
+            showText("Jag hade gett upp hoppet...");
+            
+            setTimeout(() => {
+                phone.style.top = "30%";
+                boy.style.transform = "rotateY(0deg) translateY(10px)";
+                boy.classList.add('skeptical');
+                showText("Hinge kändes tomt.");
+            }, 3000);
+
+            setTimeout(() => {
+                document.querySelector('.heart-match').style.opacity = 1;
+                document.querySelector('.heart-match').style.transform = "scale(1.5)";
+                boy.classList.remove('skeptical');
+                boy.style.transform = "scale(1.1) translateY(-10px)";
+                showText("Tills jag såg dig.");
+            }, 6000);
+
+            // GBG TRAIN
+            setTimeout(() => {
+                phone.style.top = "-500px";
+                document.body.style.background = "#2c3e50";
+                showText("Första dejten i GBG.");
+                document.getElementById('train').style.left = "120%";
+            }, 9000);
+
+            setTimeout(() => {
+                girl.style.right = "30%";
+                girl.style.transform = "rotateY(-20deg)";
+                showText("Du klev av tåget...");
+            }, 12000);
+
+            setTimeout(() => {
+                girl.classList.add('talking');
+                speak(girl, "Hej! Alltså tåget var...");
+                setTimeout(() => speak(girl, "Och sen såg jag..."), 1000);
+                setTimeout(() => speak(girl, "Vet du vad?!"), 2000);
+                showText("...och stories for days! 😂");
+                boy.classList.add('happy');
+                boy.style.transform = "rotateY(20deg)";
+            }, 14000);
+
+            setTimeout(() => {
+                showText("Jag var fast direkt.");
+                girl.classList.remove('talking');
+                hideBubble(girl);
+            }, 18000);
+
+            // PASTA
+            setTimeout(() => {
+                showText("Vi drog till restaurangen.");
+                document.getElementById('table').style.top = "30%";
+                boy.classList.remove('happy');
+                boy.classList.add('skeptical');
+            }, 21000);
+
+            setTimeout(() => {
+                showText("Jag tänkte: 'Pasta? Nja...'");
+                speak(boy, "Hmm...");
+            }, 23000);
+
+            setTimeout(() => {
+                showText("Men sen smakade jag...");
+                hideBubble(boy);
+                boy.classList.remove('skeptical');
+                boy.classList.add('happy');
+                boy.classList.add('love');
+                boy.style.transform = "rotateY(20deg) scale(1.1) translateY(-10px)";
+                speak(boy, "WOW!");
+            }, 26000);
+
+            setTimeout(() => {
+                showText("Du omvände mig. Pasta King nu.");
+                hideBubble(boy);
+                document.getElementById('table').style.top = "-500px";
+            }, 30000);
+
+            // LISEBERG
+            setTimeout(() => {
+                document.body.style.background = "#3e2723";
+                document.getElementById('lights').style.opacity = 1;
+                showText("Liseberg var magiskt.");
+                boy.classList.remove('love');
+                boy.style.transform = "translateY(-20px) rotateY(20deg)";
+                girl.style.transform = "translateY(-20px) rotateY(-20deg)";
+            }, 33000);
+
+            // KARAOKE DRIVE
+            setTimeout(() => {
+                document.getElementById('lights').style.opacity = 0;
+                document.querySelector('.floor').style.background = "#333";
+                showText("Jag ville inte att du skulle åka.");
+                document.getElementById('car').style.left = "30%";
+                boy.style.bottom = "30%"; boy.style.left = "35%";
+                girl.style.bottom = "30%"; girl.style.right = "40%";
+            }, 36000);
+
+            setTimeout(() => {
+                showText("Så vi körde till Växjö.");
+                boy.classList.add('singing');
+                girl.classList.add('singing');
+                spawnNotes();
+                setInterval(() => {
+                    document.getElementById('car').style.transform = `translateY(${Math.sin(Date.now()*0.02)*3}px)`;
+                }, 50);
+            }, 39000);
+
+            // EMOTIONAL
+            setTimeout(() => {
+                document.getElementById('car').style.left = "150%";
+                boy.classList.remove('singing'); girl.classList.remove('singing');
+                boy.style.bottom = "25%"; girl.style.bottom = "25%";
+                boy.style.left = "30%"; girl.style.right = "30%";
+                
+                document.body.style.background = "linear-gradient(to bottom, #ff9966, #ff5e62)";
+                showText("Jag har gått igenom mörker...");
+                boy.style.transform = "rotateX(20deg)";
+            }, 43000);
+
+            setTimeout(() => {
+                showText("Men du var min välsignelse.");
+                boy.style.transform = "rotateY(20deg)";
+                boy.classList.add('love');
+                girl.style.transform = "rotateY(-20deg)";
+                girl.classList.add('happy');
+            }, 46000);
+
+            setTimeout(() => {
+                document.getElementById('finalCard').classList.add('visible');
+            }, 50000);
+        }
+
+        function showText(str) {
+            text.classList.remove('visible');
+            setTimeout(() => { text.innerText = str; text.classList.add('visible'); }, 500);
+        }
+
+        function speak(char, msg) {
+            const b = char.id === 'boy' ? document.getElementById('boyBubble') : document.getElementById('girlBubble');
+            b.innerText = msg;
+            b.classList.add('pop');
+        }
+        function hideBubble(char) {
+            const b = char.id === 'boy' ? document.getElementById('boyBubble') : document.getElementById('girlBubble');
+            b.classList.remove('pop');
+        }
+
+        function spawnNotes() {
+            const interval = setInterval(() => {
+                if (!document.querySelector('.singing')) return clearInterval(interval);
+                const n = document.createElement('div');
+                n.innerHTML = "🎵";
+                n.className = "note";
+                n.style.left = Math.random() * 20 + 40 + "%";
+                n.style.top = "60%";
+                document.body.appendChild(n);
+                setTimeout(() => n.remove(), 2000);
+            }, 500);
+        }
+
+        const btnNo = document.getElementById('btnTroll');
+        function trollMove() {
+            const x = (Math.random()-0.5) * 300;
+            const y = (Math.random()-0.5) * 300;
+            btnNo.style.transform = `translate(${x}px, ${y}px) rotate(${Math.random()*20-10}deg)`;
+            btnNo.innerText = ["Missade!", "Raggedy!", "Nope!", "Cringe", "Försök igen!"][Math.floor(Math.random()*5)];
+        }
+
+        function sheSaidYes() {
+            document.getElementById('finalCard').style.display = 'none';
+            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+            
+            document.getElementById('finalMessage').style.opacity = 1;
+            
+            // Characters Kiss
+            boy.style.left = "45%";
+            girl.style.right = "45%";
+            boy.style.transform = "rotateY(20deg) scale(1.1) translateZ(50px)";
+            girl.style.transform = "rotateY(-20deg) scale(1.1) translateZ(50px)";
+        }
+    </script>
+</body>
+</html>
