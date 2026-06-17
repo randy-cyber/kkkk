@@ -1,73 +1,86 @@
-# React + TypeScript + Vite
+# TripRadar — Travel, predicted. ✈️
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A premium, mobile-first travel platform UI. TripRadar watches fares and rooms,
+scores every deal, and tells you the exact moment to book. This phase is a
+**world-class front-end built entirely on mock data** — the backend (Supabase)
+is wired up but intentionally inert until connected.
 
-Currently, two official plugins are available:
+> Designed to feel like a startup that has already raised $10M: glassmorphism,
+> aurora gradients, smooth motion, dark mode, and premium typography throughout.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Features
 
-## React Compiler
+| Page | Route | Highlights |
+| --- | --- | --- |
+| **Landing** | `/` | Hero with live fare-forecast preview, feature grid, destination showcase, AI teaser, testimonials, pricing, CTA |
+| **Dashboard** | `/app` | Stat cards, TripRadar Fare Index chart, live deal feed, top flight deals, trending destinations |
+| **Flight search** | `/app/flights` | Smart search bar, AI booking prediction, filters, flight cards with sparklines |
+| **Hotel search** | `/app/hotels` | Grid/list views, editor's pick banner, quick filters, deal-scored hotel cards |
+| **AI assistant** | `/app/assistant` | Interactive "Radar AI" chat with typing indicator, suggestion chips, scripted replies |
+| **Watchlist** | `/app/watchlist` | Tracked items, progress-to-target bars, price sparklines |
+| **Price alerts** | `/app/alerts` | Create/toggle alerts, triggered states, threshold tracking |
+| **Dream destinations** | `/app/destinations` | Filter by continent/vibe, featured deal, 12-month fare history & forecast |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🧰 Tech stack
 
-## Expanding the ESLint configuration
+- **React 19** + **TypeScript** + **Vite**
+- **Tailwind CSS v4** (CSS-first theme, custom design tokens)
+- **React Router 7** — routing
+- **Framer Motion** — page transitions, scroll reveals, micro-interactions
+- **Recharts** — price-history & forecast charts
+- **Lucide React** — icons
+- **Supabase** — client configured for the upcoming backend (mock-data fallback)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🎨 Design system
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Palette:** deep ink backgrounds with brand (cyan → indigo → violet) and gold/coral accents
+- **Glassmorphism** surfaces (`.glass`, `.glass-strong`) with backdrop blur
+- **Animated aurora** background + fine grid
+- **Typography:** Sora (display), Inter (body), Fraunces italic (editorial accents)
+- **Deal Score™** badges, trend pills, and reusable flight/hotel/destination cards
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Tokens live in `src/index.css`; shared primitives in `src/components/ui`.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🚀 Getting started
+
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # type-check + production build
+npm run preview  # serve the build
+npm run lint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🔌 Connecting Supabase (later)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The app needs no credentials to run. When you're ready for the backend:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cp .env.example .env.local
+# set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
 ```
+
+`src/lib/supabase.ts` exposes `supabase` and `isSupabaseConfigured` so feature
+code can branch on availability without crashing.
+
+## 📁 Structure
+
+```
+src/
+  components/
+    cards/      FlightCard, HotelCard, DestinationCard
+    layout/     AppLayout (sidebar, topbar, mobile nav), navItems
+    ui/         Button, DealScoreBadge, PriceChart, SmartImage, AuroraBackground, …
+    Logo.tsx
+  lib/
+    mockData.ts   destinations, flights, hotels, watchlist, alerts, chat
+    motion.ts     shared Framer Motion variants
+    supabase.ts   client (inert until configured)
+    utils.ts      cn(), formatters, deal-score helpers
+  pages/          Landing, Dashboard, Flights, Hotels, Assistant, Watchlist, Alerts, Destinations
+  main.tsx        router + lazy-loaded routes
+```
+
+---
+
+Built for travelers who hate overpaying.
