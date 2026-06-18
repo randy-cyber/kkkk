@@ -28,22 +28,27 @@ function PageLoader() {
 
 const withSuspense = (node: React.ReactNode) => <Suspense fallback={<PageLoader />}>{node}</Suspense>
 
-const router = createBrowserRouter([
-  { path: '/', element: withSuspense(<Landing />) },
-  {
-    path: '/app',
-    element: <AppLayout />,
-    children: [
-      { index: true, element: withSuspense(<Dashboard />) },
-      { path: 'flights', element: withSuspense(<Flights />) },
-      { path: 'hotels', element: withSuspense(<Hotels />) },
-      { path: 'assistant', element: withSuspense(<Assistant />) },
-      { path: 'watchlist', element: withSuspense(<Watchlist />) },
-      { path: 'alerts', element: withSuspense(<Alerts />) },
-      { path: 'destinations', element: withSuspense(<Destinations />) },
-    ],
-  },
-])
+const router = createBrowserRouter(
+  [
+    { path: '/', element: withSuspense(<Landing />) },
+    {
+      path: '/app',
+      element: <AppLayout />,
+      children: [
+        { index: true, element: withSuspense(<Dashboard />) },
+        { path: 'flights', element: withSuspense(<Flights />) },
+        { path: 'hotels', element: withSuspense(<Hotels />) },
+        { path: 'assistant', element: withSuspense(<Assistant />) },
+        { path: 'watchlist', element: withSuspense(<Watchlist />) },
+        { path: 'alerts', element: withSuspense(<Alerts />) },
+        { path: 'destinations', element: withSuspense(<Destinations />) },
+      ],
+    },
+  ],
+  // Honor Vite's base path so routing works under /kkkk/ on GitHub Pages
+  // and at / during local dev. Trailing slash stripped per React Router.
+  { basename: import.meta.env.BASE_URL.replace(/\/$/, '') },
+)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
